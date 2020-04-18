@@ -285,7 +285,7 @@ func searchKeys(data []byte, keys ...string) int {
 			if !lastMatched {
 				end := blockEnd(data[i:], '{', '}')
 				i += end - 1
-			} else{
+			} else {
 				level++
 			}
 		case '}':
@@ -786,6 +786,58 @@ func Set(data []byte, setValue []byte, keys ...string) (value []byte, err error)
 		copy(value[newEndOffset:], endComponent)
 	}
 	return value, nil
+}
+
+/*
+
+SetString - Receives existing data structure, path to set, and a string to set at that key.
+
+Returns:
+`value` - modified byte array
+`err` - On any parsing error
+
+*/
+func SetString(data []byte, setValue string, keys ...string) (value []byte, err error) {
+	return Set(data, []byte(strconv.Quote(setValue)), keys...)
+}
+
+/*
+
+SetFloat - Receives existing data structure, path to set, and a boolean to set at that key.
+
+Returns:
+`value` - modified byte array
+`err` - On any parsing error
+
+*/
+func SetFloat(data []byte, setValue float64, keys ...string) (value []byte, err error) {
+	return Set(data, []byte(strconv.FormatFloat(setValue, 'g', 7, 64)), keys...)
+}
+
+/*
+
+SetInt - Receives existing data structure, path to set, and a boolean to set at that key.
+
+Returns:
+`value` - modified byte array
+`err` - On any parsing error
+
+*/
+func SetInt(data []byte, setValue int64, keys ...string) (value []byte, err error) {
+	return Set(data, []byte(strconv.FormatInt(setValue, 10)), keys...)
+}
+
+/*
+
+SetBoolean - Receives existing data structure, path to set, and a boolean to set at that key.
+
+Returns:
+`value` - modified byte array
+`err` - On any parsing error
+
+*/
+func SetBoolean(data []byte, setValue bool, keys ...string) (value []byte, err error) {
+	return Set(data, []byte(strconv.FormatBool(setValue)), keys...)
 }
 
 func getType(data []byte, offset int) ([]byte, ValueType, int, error) {

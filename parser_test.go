@@ -41,7 +41,7 @@ type GetTest struct {
 type SetTest struct {
 	desc    string
 	json    string
-	setData string
+	setData interface{}
 	path    []string
 
 	isErr   bool
@@ -379,6 +379,74 @@ var setTests = []SetTest{
 		setData: `"value"`,
 		isFound: true,
 		data:    `{"top":["one", "two", "value"]}`,
+	},
+}
+
+var setStringTests = []SetTest{
+	{
+		desc:    "set a value",
+		json:    `{"foo":"bar"}`,
+		path:    []string{"foo"},
+		setData: `baz`,
+		isFound: true,
+		data:    `{"foo":"baz"}`,
+	},
+	{
+		desc:    "set a value containing quotes",
+		json:    `{"foo":"bar"}`,
+		path:    []string{"foo"},
+		setData: `"baz"`,
+		isFound: true,
+		data:    `{"foo":"\"baz\""}`,
+	},
+}
+
+var setFloatTests = []SetTest{
+	{
+		desc:    "set a value without decimals",
+		json:    `{"foo":"bar"}`,
+		path:    []string{"foo"},
+		setData: float64(1.0),
+		isFound: true,
+		data:    `{"foo":1}`,
+	},
+	{
+		desc:    "set a value with decimals",
+		json:    `{"foo":"bar"}`,
+		path:    []string{"foo"},
+		setData: float64(1.1),
+		isFound: true,
+		data:    `{"foo":1.1}`,
+	},
+}
+
+var setIntTests = []SetTest{
+	{
+		desc:    "set a value",
+		json:    `{"foo":"bar"}`,
+		path:    []string{"foo"},
+		setData: int64(1),
+		isFound: true,
+		data:    `{"foo":1}`,
+	},
+}
+
+var setBooleanTests = []SetTest{
+	{
+		desc:    "set to true",
+		json:    `{"foo":"bar"}`,
+		path:    []string{"foo"},
+		setData: true,
+		isFound: true,
+		data:    `{"foo":true}`,
+	},
+	{
+		desc:    "set to false",
+		json:    `{"foo":"bar"}`,
+		path:    []string{"foo"},
+		setData: false,
+		isFound: true,
+		data:    `{"foo":false}`,
 	},
 }
 
@@ -1104,7 +1172,59 @@ func runDeleteTests(t *testing.T, testKind string, tests []DeleteTest, runner fu
 func TestSet(t *testing.T) {
 	runSetTests(t, "Set()", setTests,
 		func(test SetTest) (value interface{}, dataType ValueType, err error) {
-			value, err = Set([]byte(test.json), []byte(test.setData), test.path...)
+			value, err = Set([]byte(test.json), []byte(test.setData.(string)), test.path...)
+			return
+		},
+		func(test SetTest, value interface{}) (bool, interface{}) {
+			expected := []byte(test.data.(string))
+			return bytes.Equal(expected, value.([]byte)), expected
+		},
+	)
+}
+
+func TestSetString(t *testing.T) {
+	runSetTests(t, "SetString()", setStringTests,
+		func(test SetTest) (value interface{}, dataType ValueType, err error) {
+			value, err = SetString([]byte(test.json), test.setData.(string), test.path...)
+			return
+		},
+		func(test SetTest, value interface{}) (bool, interface{}) {
+			expected := []byte(test.data.(string))
+			return bytes.Equal(expected, value.([]byte)), expected
+		},
+	)
+}
+
+func TestSetFloat(t *testing.T) {
+	runSetTests(t, "SetInt()", setFloatTests,
+		func(test SetTest) (value interface{}, dataType ValueType, err error) {
+			value, err = SetFloat([]byte(test.json), test.setData.(float64), test.path...)
+			return
+		},
+		func(test SetTest, value interface{}) (bool, interface{}) {
+			expected := []byte(test.data.(string))
+			return bytes.Equal(expected, value.([]byte)), expected
+		},
+	)
+}
+
+func TestSetInt(t *testing.T) {
+	runSetTests(t, "SetInt()", setIntTests,
+		func(test SetTest) (value interface{}, dataType ValueType, err error) {
+			value, err = SetInt([]byte(test.json), test.setData.(int64), test.path...)
+			return
+		},
+		func(test SetTest, value interface{}) (bool, interface{}) {
+			expected := []byte(test.data.(string))
+			return bytes.Equal(expected, value.([]byte)), expected
+		},
+	)
+}
+
+func TestSetBoolean(t *testing.T) {
+	runSetTests(t, "SetBoolean()", setBooleanTests,
+		func(test SetTest) (value interface{}, dataType ValueType, err error) {
+			value, err = SetBoolean([]byte(test.json), test.setData.(bool), test.path...)
 			return
 		},
 		func(test SetTest, value interface{}) (bool, interface{}) {
